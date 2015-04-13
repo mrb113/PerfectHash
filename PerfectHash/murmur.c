@@ -75,8 +75,6 @@ FORCE_INLINE uint32_t fmix(uint32_t h)
 
 //-----------------------------------------------------------------------------
 
-
-
 void MurmurHash3_x86_32(const void * key, int len,
 	uint32_t seed, void * out)
 {
