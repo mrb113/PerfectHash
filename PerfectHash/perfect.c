@@ -1,28 +1,36 @@
 #include "perfect.h"
 
-/* Test input */
-int keys[4] = { 6, 23, 500 };
-#define TABLE_SIZE nextPowerOfTwo(sizeof(keys) / sizeof(int))
-
 /* Generate a perfect hash function */
-int perfectHash(int* input, int size, int* lookup, int* values){
-
+int perfectHash(int* input, int size, int* lookup, int* hashtable) {
+	// If we input too many keys, fail
+	if (size > MAX_INPUT) {
+		return 0; 
+	}
 	
 	// TODO the good stuff 
 
 	return 1; 
 }
 
-/* Lookup a value in the hash table given a key */
-uint lookup(uint key, int* lookuptable, int* values) {
+/* Insert a key/value pair into the hashtable */
+int insert(uint key, uint value){
+	kvp add = { key, value };
+	// TODO 
+	return 1; 
+}
+
+/* Return a value in the hash table given a key */
+uint lookup(uint key, int* lookuptable, p_kvp hashtable) {
 	
 	// Grab the hash function seed from the lookup table	
-	int lookupslot = (int)hash(key, 0) & (TABLE_SIZE - 1);
+	int lookupslot = (int)hash(key, 0) & (length(lookuptable) - 1);
 	int seed = lookuptable[lookupslot];
 
-	// Get the actual value from the hash table now
-	int valueslot = (int)hash(key, seed) & (TABLE_SIZE - 1);
-	uint value = values[valueslot];
+	// Get the actual value from the hash table
+	int valueslot = (int)hash(key, seed) & (length(hashtable) - 1);
+
+	// TODO use key/value pair
+	int value = hashtable[valueslot].value;
 	return value; 	
 }
 
