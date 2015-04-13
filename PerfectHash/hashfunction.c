@@ -1,14 +1,8 @@
-#include "hashfunction.h"
-uint32_t hashint(uint32_t a, uint32_t seed)
-{
-	a = (a ^ seed) + (a << 4);
-	a = a ^ (a >> 10);
-	a = a + (a << 7);
-	a = a ^ (a >> 13);
-	return a;
-}
+#include "perfect.h"
 
-uint32_t hash(uint32_t a, uint32_t seed)
+/* Bob Jenkins' hash function modified to take a seed 
+   http://burtleburtle.net/bob/hash/integer.html */ 
+uint hash(uint a, uint seed)
 {
 	a = (a + seed) + (a << 12);
 	a = (a ^ 0xc761c23c) ^ (a >> 19);
