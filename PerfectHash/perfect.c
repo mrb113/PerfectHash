@@ -17,8 +17,10 @@ int perfectHash(p_kvp input, int* lookuptable, int* hashtable, int length) {
 		return 0;
 	}
 
+	// Fill array with empty buckets
 	bucket empty; 
 	empty.keyvalue = NULL; 
+	empty.size = 0; 
 	for (int i = 0; i < tablesize; i++){
 		buckets[i] = empty; 
 	}
@@ -34,14 +36,45 @@ int perfectHash(p_kvp input, int* lookuptable, int* hashtable, int length) {
 			return 0; 
 		}		
 	} 
-	printf(" Printing bucket list:\n"); 
-	printbucketlist(buckets, tablesize);
-	// TODO 2. sort buckets
+	printbucketlist(buckets, tablesize); 
+
+	// Sort the buckets
+	// NOTE: Implementing a version of radix sort may be more efficient than quick sort
+	qsort(buckets, tablesize, sizeof(bucket), bucketCompare);
+	
+	// If the largest bucket is of size 1, we already have no collisions
+	if (buckets[0].size == 1) {
+		memset(lookuptable, 0, tablesize * sizeof(int));
+	}
+
 	// TODO 3. for each bucket, find a seed that works for no collisions
+	int seed; 
+	for (int i = 0; i < tablesize; i++) {
+		// If we only have empty buckets left, stop.
+		if (buckets[i].size = 0) {
+			break; 
+		}
+		seed = FindSeed(buckets[i], hashtable, tablesize);
+		
+	}
 	// TODO 4. When found, add the values into the hash table
 	// TODO 5. insert seed into lookuptable[(int)hash(bucket[0].key, 0) & (length(lookuptable) - 1)]; 
 
 	return 1; 
+}
+
+/* Find a new seed that works for all of the values in the bucket */
+int FindSeed(bucket b, int* hashtable, int tablesize) {
+	// If we have more than one kvp in a bucket, make sure our new seed doesn't make them collide with each other.
+	if (b.size > 1) {
+		bucket* buckets = malloc(tablesize * sizeof(bucket));
+	}
+
+	p_kvp k = b.keyvalue;
+	while (k != NULL) {
+		printf("Key: %d Value: %d\n", k->key, k->value);
+		k = k->next;
+	}
 }
 
 /* Adds a key/value pair node to the beginning of the bucket */
@@ -79,7 +112,6 @@ uint lookup(uint key, int* lookuptable, p_kvp hashtable) {
 
 /* Round up to the next power of 2 */
 int nextPowerOfTwo(int v) {
-
 	v--;
 	v |= v >> 1;
 	v |= v >> 2;
@@ -88,4 +120,12 @@ int nextPowerOfTwo(int v) {
 	v |= v >> 16;
 	v++;
 	return v; 
+}
+
+/* For sorting: The bucket with the larger size wins */ 
+int bucketCompare(const void* a, const void* b) {
+	const bucket *elem1 = a;
+	const bucket *elem2 = b;
+
+	return elem2->size - elem1->size; 
 }

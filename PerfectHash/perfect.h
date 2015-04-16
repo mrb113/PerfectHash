@@ -29,3 +29,5 @@ uint hash(uint a, uint seed);
 int nextPowerOfTwo(int v);
 uint lookup(uint key, int* lookuptable, p_kvp hashtable); 
 int addNodeToBucket(p_bucket b, uint key, uint value);
+int bucketCompare(const void* a, const void* b); 
+int FindSeed(bucket b, int* hashtable, int tablesize);

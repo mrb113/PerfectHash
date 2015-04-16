@@ -8,8 +8,8 @@ void main() {
 	kvp l = { 1, 300, NULL };
 
 	
-	kvp input[3] = { { 0, 132, NULL }, { 1, 300, NULL }, { 6, 800, NULL } };
-	int lookup[2] = { 1, 2 };
+	kvp input[3] = { { 0, 132, NULL }, { 1, 300, NULL }, { 2, 800, NULL } };
+	int lookup[4]; 
 	int hash[2] = { 3, 6 };
 	perfectHash(input, lookup, hash, 3);
 	
