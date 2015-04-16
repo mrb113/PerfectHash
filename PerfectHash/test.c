@@ -7,12 +7,12 @@ void main() {
 	kvp k = { 0, 132, NULL };
 	kvp l = { 1, 300, NULL };
 
-	kvp input[2] = { { 0, 132, NULL }, { 1, 300, NULL } };
-
-	int lookuptable[4] = { 0, 1, 2, 3 };
-	int hashtable[4] = { 0, 0, 0, 0 };
-
-	perfectHash(input, lookuptable, hashtable, length(input));
+	
+	kvp input[3] = { { 0, 132, NULL }, { 1, 300, NULL }, { 6, 800, NULL } };
+	int lookup[2] = { 1, 2 };
+	int hash[2] = { 3, 6 };
+	perfectHash(input, lookup, hash, 3);
+	
 	getchar(); 
 }
 
@@ -24,14 +24,15 @@ void printhashtable(p_kvp hashtable){
 	// TODO 
 }
 
-void printbucketlist(p_bucket bucketlist) {
-	for (int i = 0; i < length(bucketlist); i++) {		
+void printbucketlist(p_bucket bucketlist, int size) {
+	for (int i = 0; i < size; i++) {	
+		if (bucketlist[i].collisionvalue >= 0 && bucketlist[i].collisionvalue <= size)
 		printbucket(&bucketlist[i]);
 	}
 }
 
 void printbucket(p_bucket bucket){
-	printf("Printing bucket contents: \n"); 
+	printf("Printing bucket %d contents: \n", bucket->collisionvalue); 
 	p_kvp k = bucket->keyvalue;
 	while (k != NULL) {
 		printf("Key: %d Value: %d\n", k->key, k->value); 
