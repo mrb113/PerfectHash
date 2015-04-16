@@ -26,5 +26,5 @@ typedef struct BUCKET {
 uint hash(uint a, uint seed);
 int nextPowerOfTwo(int v);
 uint lookup(uint key, int* lookuptable, p_kvp hashtable); 
-int perfectHash(kvp* input, int* lookuptable, int* hashtable);
+int perfectHash(p_kvp input, int* lookuptable, int* hashtable, int length);
 int addNodeToBucket(p_bucket b, uint key, uint value);

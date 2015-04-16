@@ -1,26 +1,30 @@
 #include "perfect.h"
 
 /* Generate a perfect hash function */
-int perfectHash(kvp* input, int* lookuptable, int* hashtable) {
-
+int perfectHash(p_kvp input, int* lookuptable, int* hashtable, int length) {
+	
 	// If we input too many keys, fail
-	if (length(input) > MAX_INPUT) {
+	if (length > MAX_INPUT) {
 		return 0;
 	}
 
-	const int tablesize = nextPowerOfTwo(length(input)); 
+	const int tablesize = nextPowerOfTwo(length); 
 	
 	// Create array of buckets
-	struct bucket* buckets = malloc(tablesize * sizeof(struct bucket*));
+	bucket* buckets = malloc(tablesize * sizeof(bucket*));
 	if (buckets == NULL) {
 		free(buckets);
 		return 0;
 	}
 
-	// TODO 1. create buckets by regular hashing
-	for (int i = 0; i < length(input); i++) {
+	// Create buckets by regular hashing
+	for (int i = 0; i < length; i++) {
 		int slot = (int)hash(input[i].key, 0) & (tablesize - 1);
-		
+
+		// Add the key/value pair to the correct bucket
+		if (addNodeToBucket(&buckets[slot], input[i].key, input[i].value) == 0) {
+			return 0; 
+		}
 	}
 	
 	// TODO 2. sort buckets

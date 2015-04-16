@@ -4,6 +4,15 @@
 void main() {
 	// Add tests here as needed
 
+	kvp k = { 0, 132, NULL };
+	kvp l = { 1, 300, NULL };
+
+	kvp input[2] = { { 0, 132, NULL }, { 1, 300, NULL } };
+
+	int lookuptable[4] = { 0, 1, 2, 3 };
+	int hashtable[4] = { 0, 0, 0, 0 };
+
+	perfectHash(input, lookuptable, hashtable, length(input));
 	getchar(); 
 }
 
