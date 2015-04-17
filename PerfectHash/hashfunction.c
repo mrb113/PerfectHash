@@ -2,7 +2,7 @@
 
 /* Bob Jenkins' hash function modified to take a seed 
    http://burtleburtle.net/bob/hash/integer.html */ 
-uint hash(uint a, uint seed)
+uint Hash(uint a, uint seed)
 {
 	a = (a + seed) + (a << 12);
 	a = (a ^ 0xc761c23c) ^ (a >> 19);

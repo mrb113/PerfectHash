@@ -24,10 +24,11 @@ typedef struct BUCKET {
 	int size; 
 } bucket, *p_bucket;
 
-int perfectHash(p_kvp input, int* lookuptable, int* hashtable, int length);
-uint hash(uint a, uint seed);
-int nextPowerOfTwo(int v);
-uint lookup(uint key, int* lookuptable, p_kvp hashtable); 
-int addNodeToBucket(p_bucket b, uint key, uint value);
-int bucketCompare(const void* a, const void* b); 
-int FindSeed(bucket b, int* hashtable, int tablesize);
+int PerfectHash(p_kvp input, int* lookuptable, p_kvp hashtable, int length);
+uint Hash(uint a, uint seed);
+int NextPowerOfTwo(int v);
+uint Lookup(uint key, int* lookuptable, p_kvp hashtable); 
+int AddNodeToBucket(p_bucket b, uint key, uint value);
+int BucketCompare(const void* a, const void* b); 
+int FindSeed(p_bucket b, p_kvp hashtable, int tablesize);
+void Insert(kvp toinsert, int seed, p_kvp hashtable, int tablesize);
