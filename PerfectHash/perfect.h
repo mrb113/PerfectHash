@@ -10,6 +10,10 @@ typedef unsigned int uint;
 /* 2^30: Largest signed integer power of 2 */
 #define MAX_INPUT 1073741824
 
+/* Exit codes */
+#define FAILURE 0
+#define SUCCESS 1
+
 /* Key/value pair node*/
 typedef struct KEY_VALUE_PAIR {
 	uint key; 
@@ -32,3 +36,4 @@ int AddNodeToBucket(p_bucket b, uint key, uint value);
 int BucketCompare(const void* a, const void* b); 
 int FindSeed(p_bucket b, p_kvp hashtable, int tablesize);
 void Insert(kvp toinsert, int seed, p_kvp hashtable, int tablesize);
+void FreeKeyValues(p_kvp k);

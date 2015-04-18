@@ -3,18 +3,33 @@
 
 void main() {
 	// Add tests here as needed
-
 	
 	kvp input[3] = { { 0, 132, NULL }, { 1, 300, NULL }, { 2, 800, NULL } };
 	int lookup[4]; 
-	kvp hash[4]; 
+	kvp hash[4];
+	memset(hash, 0xff, 4 * sizeof(int));
+	printf("With seed 0:\n"); 
+	for (int i = 0; i < 3; i++) {
+		int test = Hash(input[i].key, 0) & 3;
+		printf("Input: %d Hash: %d\n", input[i].key, test);
+	}
+
+	printf("With seed 2:\n");
+	for (int i = 0; i < 3; i++) {
+		int test = Hash(input[i].key, 2) & 3;
+		printf("Input: %d Hash: %d\n", input[i].key, test);
+	}
 	PerfectHash(input, lookup, hash, 3);
-	
+	printf("Found something\n");
+	printhashtable(hash, 4);
+	printlookuptable(lookup, 4);
 	getchar(); 
 }
 
 void printlookuptable(int* lookuptable, int size){
-	
+	for (int i = 0; i < size; i++) {
+		printf("%d: %d\n", i, lookuptable[i]); 
+	}
 }
 
 void printhashtable(p_kvp hashtable, int size){
