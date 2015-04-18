@@ -129,24 +129,25 @@ int FindSeed(p_bucket b, p_kvp hashtable, int tablesize) {
 int VerifyNoBucketCollisions(p_bucket b, int tablesize, int seed) {
 	int exitCode = FAILURE; 
 
-	int* values = malloc(tablesize * sizeof(int));
+	char* values = malloc(tablesize * sizeof(char));
 	if (values == NULL) {
 		return exitCode;
 	}
 
 	// Fill values[] with -1: 
-	memset(values, 0xff, tablesize * sizeof(int));
+	memset(values, 0xff, tablesize * sizeof(char));
 
-	int i = 0;
+	int slot;
 	p_kvp k = b->keyvalue; 
 	// Check each value for collisions with others in the bucket
 	while (k != NULL) {
-		if (values[i] != -1) {
+		slot = Hash(k->key, seed) & (tablesize - 1);
+		if (values[slot] != -1) {
 			goto Cleanup; 
 		}
-		values[i] = Hash(k->key, seed) & (tablesize - 1);
+		// Mark the spot as full
+		values[slot] = 1; 
 		k = k->next;
-		i++;
 	}
 	exitCode = SUCCESS; 
 
@@ -238,4 +239,5 @@ void FreeKeyValues(p_kvp k) {
 		current = current->next;
 		free(temp); 
 	}
+	k = NULL; 
 }

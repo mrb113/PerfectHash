@@ -14,9 +14,9 @@ void main() {
 		printf("Input: %d Hash: %d\n", input[i].key, test);
 	}
 
-	printf("With seed 2:\n");
+	printf("With seed 1:\n");
 	for (int i = 0; i < 3; i++) {
-		int test = Hash(input[i].key, 2) & 3;
+		int test = Hash(input[i].key, 1) & 3;
 		printf("Input: %d Hash: %d\n", input[i].key, test);
 	}
 	PerfectHash(input, lookup, hash, 3);
