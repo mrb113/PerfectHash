@@ -1,7 +1,7 @@
 //#include "perfect.h"
 #include "test.h"
 /* Generate a perfect hash function */
-int PerfectHash(p_kvp input, int* lookuptable, p_kvp hashtable, int length) {
+int GeneratePerfectHash(uint* input, int* lookuptable, int length) {
 	int exitCode = FAILURE; 
 
 	// If we input too many keys, fail
@@ -10,13 +10,6 @@ int PerfectHash(p_kvp input, int* lookuptable, p_kvp hashtable, int length) {
 	}
 	
 	const int tablesize = NextPowerOfTwo(length); 
-	
-	// Fill hashtable with empty kvps
-	kvp emptykvp;
-	emptykvp.key = -1;
-	for (int i = 0; i < tablesize; i++){
-		hashtable[i] = emptykvp;
-	}
 
 	// Create array of buckets
 	bucket* buckets = malloc(tablesize * sizeof(bucket));
@@ -26,7 +19,7 @@ int PerfectHash(p_kvp input, int* lookuptable, p_kvp hashtable, int length) {
 
 	// Fill array with empty buckets
 	bucket emptybucket; 
-	emptybucket.keyvalue = NULL; 
+	emptybucket.head = NULL; 
 	emptybucket.size = 0; 
 	for (int i = 0; i < tablesize; i++){
 		buckets[i] = emptybucket; 
@@ -34,12 +27,11 @@ int PerfectHash(p_kvp input, int* lookuptable, p_kvp hashtable, int length) {
 
 	// Create buckets by regular hashing
 	for (int i = 0; i < length; i++) {
-
-		int slot = (int)Hash(input[i].key, 0) & (tablesize - 1);
+		int slot = (int)Hash(input[i], 0) & (tablesize - 1);
 		buckets[slot].collisionvalue = slot; 
 
 		// Add the key/value pair to the correct bucket
-		if (AddNodeToBucket(&buckets[slot], input[i].key, input[i].value) == FAILURE) {
+		if (AddNodeToBucket(&buckets[slot], input[i]) == FAILURE) {
 			goto Cleanup; 
 		}		
 	} 
@@ -52,76 +44,66 @@ int PerfectHash(p_kvp input, int* lookuptable, p_kvp hashtable, int length) {
 	// If the largest bucket is of size 1, we already have no collisions
 	if (buckets[0].size == 1) {
 
-		// Create lookup table and hash table
+		// Create lookup table 
 		memset(lookuptable, 0, tablesize * sizeof(int));
-		for (int i = 0; i < length; i++) {
-			int slot = (int)Hash(input[i].key, 0) & (tablesize - 1);
-			hashtable[slot] = input[i];
-		}
-
 		exitCode = SUCCESS; 
 		goto Cleanup; 
 	}
 
 	// For each bucket, find a seed that works for no collisions
-	int seed; 
-	p_kvp k; 
+	int seed;
 	for (int i = 0; i < tablesize; i++) {
 
 		// If we only have empty buckets left, stop.
 		if (buckets[i].size == 0) {
 			break; 
 		}
-		seed = FindSeed(&buckets[i], hashtable, tablesize);
+		seed = FindSeed(&buckets[i], tablesize);
 		if (seed == FAILURE) {
 			goto Cleanup;
 		}
 		// Add the seed to the lookup table 
 		int lookupslot = buckets[i].collisionvalue;
 		lookuptable[lookupslot] = seed;
-
-		// Add the values to the hash table 
-		k = buckets[i].keyvalue;
-	
-		while (k != NULL) {
-			Insert(*k, seed, hashtable, tablesize);
-			k = k->next;
-		}
 	}
 	exitCode = SUCCESS;
 
 Cleanup:
 	if (buckets) {
 		for (int i = 0; i < tablesize; i++) {
-			FreeKeyValues(buckets[i].keyvalue);
+			FreeKeys(buckets[i].head);
 		}
 	}
 	return exitCode; 
 }
 
 /* Find a new seed that works for all of the values in the bucket */
-int FindSeed(p_bucket b, p_kvp hashtable, int tablesize) {
+int FindSeed(p_bucket b, int tablesize) {
+	char* collisions = malloc(tablesize * sizeof(char));
+	memset(collisions, 0xff, tablesize * sizeof(int));
 
-	p_kvp k = b->keyvalue;
+	p_keynode key = b->head;
 	int seed = 1; 
 	
 	// Start looking for a seed
 	while (1) {
-		k = b->keyvalue;	
+		key = b->head;	
 
-		// If we have more than one kvp in a bucket, make sure they won't collide with each other.
+		// If we have more than one key in a bucket, make sure they won't collide with each other.
 		if (b->size > 1 && VerifyNoBucketCollisions(b, tablesize, seed) == FAILURE) {
 			seed++; 
 			continue; 
 		}		
 
 		// Check to see if our new seed generates collisions with values in the existing hash table		
-		if (VerifyNoHashTableCollisions(b, hashtable, tablesize, seed) == FAILURE) {
+		if (VerifyNoHashTableCollisions(b, collisions, tablesize, seed) == FAILURE) {
 			seed++; 
 			continue; 
 		}
+		free(collisions);
 		return seed; 
 	}	
+	free(collisions); 
 	return FAILURE; 
 }
 
@@ -138,7 +120,7 @@ int VerifyNoBucketCollisions(p_bucket b, int tablesize, int seed) {
 	memset(values, 0xff, tablesize * sizeof(char));
 
 	int slot;
-	p_kvp k = b->keyvalue; 
+	p_keynode k = b->head; 
 
 	// Check each value for collisions with others in the bucket
 	while (k != NULL) {
@@ -160,12 +142,12 @@ Cleanup:
 	return exitCode; 
 }
 
-int VerifyNoHashTableCollisions(p_bucket b, p_kvp hashtable, int tablesize, int seed) {
-	p_kvp k = b->keyvalue; 
+int VerifyNoHashTableCollisions(p_bucket b, char* collisiontable, int tablesize, int seed) {
+	p_keynode k = b->head; 
 	int hashslot; 
 	while (k != NULL) {
 		hashslot = Hash(k->key, seed) & (tablesize - 1);
-		if (hashtable[hashslot].key != -1) {
+		if (collisiontable[hashslot] != -1) {
 			return FAILURE; 
 		}
 		k = k->next;
@@ -173,27 +155,26 @@ int VerifyNoHashTableCollisions(p_bucket b, p_kvp hashtable, int tablesize, int 
 	return SUCCESS; 
 }
 
-/* Adds a key/value pair node to the beginning of the bucket */
-int AddNodeToBucket(p_bucket b, uint key, uint value) {
+/* Adds a key pair node to the beginning of the bucket */
+int AddNodeToBucket(p_bucket b, uint key) {
 	
-	p_kvp head = b->keyvalue;
-    p_kvp new_head = (p_kvp) malloc (sizeof (kvp));
+	p_keynode head = b->head;
+    p_keynode new_head = (p_keynode) malloc (sizeof (key));
 	
 	if (new_head == NULL) {
 		return FAILURE; 
 	}
     new_head->key = key;
-	new_head->value = value; 
     new_head->next = head;
 
-	b->keyvalue = new_head; 
+	b->head = new_head; 
 	// Increase bucket size
 	b->size++; 
 	return SUCCESS; 
 }
 
 /* Return a value in the hash table given a key */
-uint Lookup(uint key, int* lookuptable, p_kvp hashtable, int tablesize) {
+uint Lookup(uint key, int* lookuptable, uint* hashtable, int tablesize) {
 	
 	// Grab the hash function seed from the lookup table	
 	int lookupslot = (int)Hash(key, 0) & (tablesize - 1);
@@ -202,14 +183,14 @@ uint Lookup(uint key, int* lookuptable, p_kvp hashtable, int tablesize) {
 	// Get the actual value from the hash table
 	int valueslot = (int)Hash(key, seed) & (tablesize - 1);
 
-	int value = hashtable[valueslot].value;
+	int value = hashtable[valueslot];
 	return value; 	
 }
 
 /* Insert an item into the hash table using the seed */
-void Insert(kvp toinsert, int seed, p_kvp hashtable, int tablesize) {
-	int hashslot = Hash(toinsert.key, seed) & (tablesize - 1);
-	hashtable[hashslot] = toinsert; 
+void Insert(uint key, uint value, int seed, uint* hashtable, int tablesize) {
+	int hashslot = Hash(key, seed) & (tablesize - 1);
+	hashtable[hashslot] = value; 
 }
 
 /* Round up to the next power of 2 */
@@ -232,13 +213,13 @@ int BucketCompare(const void* a, const void* b) {
 	return elem2->size - elem1->size; 
 }
 
-void FreeKeyValues(p_kvp k) {
-	p_kvp current = k; 
-	p_kvp temp; 
+void FreeKeys(p_keynode head) {
+	p_keynode current = head; 
+	p_keynode temp; 
 	while (current != NULL) {
 		temp = current; 
 		current = current->next;
 		free(temp); 
 	}
-	k = NULL; 
+	head = NULL; 
 }
