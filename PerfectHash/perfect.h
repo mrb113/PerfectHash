@@ -30,7 +30,7 @@ typedef struct BUCKET {
 uint Hash(uint a, uint seed);
 
 int GeneratePerfectHash(uint* input, int* lookuptable, int length);
-int FindSeed(p_bucket b, int tablesize);
+int FindSeed(p_bucket b, char* collisions, int tablesize);
 int VerifyNoBucketCollisions(p_bucket b, int tablesize, int seed);
 int VerifyNoHashTableCollisions(p_bucket b, char* collisiontable, int tablesize, int seed);
 int AddNodeToBucket(p_bucket b, uint key);

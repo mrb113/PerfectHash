@@ -1,6 +1,16 @@
 //#include "perfect.h"
 #include "test.h"
-/* Generate a perfect hash function */
+
+/* GeneratePerfectHash 
+Description: 
+	Generate a perfect hash function for a set of keys
+Parameters: 
+	input: The set of keys for which to generate a hash function
+	lookuptable: Table in which to place the seed values for our perfect hash function
+	length: The number of elements in the hash table
+Returns: 
+	0 on failure, 1 on success
+*/
 int GeneratePerfectHash(uint* input, int* lookuptable, int length) {
 	int exitCode = FAILURE; 
 
@@ -11,9 +21,10 @@ int GeneratePerfectHash(uint* input, int* lookuptable, int length) {
 	
 	const int tablesize = NextPowerOfTwo(length); 
 
-	// Create array of buckets
+	// Create array of buckets and collision table
 	bucket* buckets = malloc(tablesize * sizeof(bucket));
-	if (buckets == NULL) { 
+	char* collisions = malloc(tablesize * sizeof(char));
+	if (buckets == NULL || collisions == NULL) { 
 		goto Cleanup; 
 	}
 
@@ -43,12 +54,14 @@ int GeneratePerfectHash(uint* input, int* lookuptable, int length) {
 	
 	// If the largest bucket is of size 1, we already have no collisions
 	if (buckets[0].size == 1) {
-
 		// Create lookup table 
 		memset(lookuptable, 0, tablesize * sizeof(int));
 		exitCode = SUCCESS; 
 		goto Cleanup; 
 	}
+
+	// A 0 in the collision table means that spot in the hash table is available
+	memset(collisions, 0, tablesize * sizeof(int));
 
 	// For each bucket, find a seed that works for no collisions
 	int seed;
@@ -58,7 +71,7 @@ int GeneratePerfectHash(uint* input, int* lookuptable, int length) {
 		if (buckets[i].size == 0) {
 			break; 
 		}
-		seed = FindSeed(&buckets[i], tablesize);
+		seed = FindSeed(&buckets[i], collisions, tablesize);
 		if (seed == FAILURE) {
 			goto Cleanup;
 		}
@@ -74,13 +87,23 @@ Cleanup:
 			FreeKeys(buckets[i].head);
 		}
 	}
+	if (collisions) {
+		free(collisions);
+	}
 	return exitCode; 
 }
 
-/* Find a new seed that works for all of the values in the bucket */
-int FindSeed(p_bucket b, int tablesize) {
-	char* collisions = malloc(tablesize * sizeof(char));
-	memset(collisions, 0xff, tablesize * sizeof(int));
+/* FindSeed
+Description: 
+	Find a new seed that works for all of the values in the bucket
+Parameters:
+	b: Pointer to the bucket for which we are finding a seed that generates no collisions
+	collisiontable: Table storing which slots in the hash table are taken
+	tablesize: Number of elements in the hash table
+Returns: 
+	0 on failure, 1 on success
+*/
+int FindSeed(p_bucket b, char* collisions, int tablesize) {	
 
 	p_keynode key = b->head;
 	int seed = 1; 
@@ -107,13 +130,23 @@ int FindSeed(p_bucket b, int tablesize) {
 	return FAILURE; 
 }
 
-/* When testing a new seed, check that it won't cause collisions between any keys in the bucket */
+/* VerifyNoBucketCollisions
+Description: 
+	When testing a new seed, check that it won't cause collisions between any keys in the bucket. 
+Parameters: 
+	b: Pointer to the bucket for which we are testing a new seed value
+	tablesize: The number of elements in the hash table
+	seed: The seed to test
+Returns: 
+	0 on failure, 1 on success
+*/
 int VerifyNoBucketCollisions(p_bucket b, int tablesize, int seed) {
 	int exitCode = FAILURE; 
 
+	// Create a temporary table to check the bucket values
 	char* values = malloc(tablesize * sizeof(char));
 	if (values == NULL) {
-		return exitCode;
+		return FAILURE;
 	}
 
 	// Fill values[] with -1: 
@@ -138,10 +171,20 @@ Cleanup:
 	if (values) {
 		free(values);
 	}	
-
 	return exitCode; 
 }
 
+/* VerifyNoHashTableCollisions
+Description:
+	When testing a new seed, check that it won't cause collisions between any keys in the bucket.
+Parameters:
+	b: Pointer to the bucket for which we are testing a new seed value
+	collisiontable: Represents 
+	tablesize: The number of elements in the hash table
+	seed: The seed to test
+Returns:
+	0 on failure, 1 on success
+*/
 int VerifyNoHashTableCollisions(p_bucket b, char* collisiontable, int tablesize, int seed) {
 	p_keynode k = b->head; 
 	int hashslot; 
@@ -155,7 +198,15 @@ int VerifyNoHashTableCollisions(p_bucket b, char* collisiontable, int tablesize,
 	return SUCCESS; 
 }
 
-/* Adds a key pair node to the beginning of the bucket */
+/* AddNodeToBucket
+Description: 
+	Adds a key pair node to the beginning of the bucket
+Parameters:
+	b: Pointer to the bucket to add
+	key: Key to add to the bucket 
+Returns: 
+	0 on failure, 1 on success
+*/
 int AddNodeToBucket(p_bucket b, uint key) {
 	
 	p_keynode head = b->head;
@@ -173,9 +224,18 @@ int AddNodeToBucket(p_bucket b, uint key) {
 	return SUCCESS; 
 }
 
-/* Return a value in the hash table given a key */
+/* Lookup
+Description: 
+	Return a value in the hash table given a key
+Parameters:
+	key: Key whose value we are looking up in the hash table 
+	lookuptable: Table containing
+	hashtable: The hash table containing values
+	tablesize: Number of elements in the hash table
+Returns: 
+	The value from the hash table
+*/
 uint Lookup(uint key, int* lookuptable, uint* hashtable, int tablesize) {
-	
 	// Grab the hash function seed from the lookup table	
 	int lookupslot = (int)Hash(key, 0) & (tablesize - 1);
 	int seed = lookuptable[lookupslot];
@@ -187,13 +247,28 @@ uint Lookup(uint key, int* lookuptable, uint* hashtable, int tablesize) {
 	return value; 	
 }
 
-/* Insert an item into the hash table using the seed */
+/* Insert
+Description: 
+	Insert an item into the hash table using the given seed 	
+Parameters: 
+	key: Key whose associated value we want to insert
+	value: Value to insert
+	hashtable: Table to insert values into 
+	tablesize: Number of elements in the hash table 
+*/
 void Insert(uint key, uint value, int seed, uint* hashtable, int tablesize) {
 	int hashslot = Hash(key, seed) & (tablesize - 1);
 	hashtable[hashslot] = value; 
 }
 
-/* Round up to the next power of 2 */
+/* NextPowerOfTwo
+Description: 
+	Round an integer up to the next power of 2
+Parameters: 
+	v: The integer to round up 	
+Returns:
+	The rounded-up value of the integer 
+*/
 int NextPowerOfTwo(int v) {
 	v--;
 	v |= v >> 1;
@@ -205,7 +280,14 @@ int NextPowerOfTwo(int v) {
 	return v; 
 }
 
-/* For sorting: The bucket with the larger size wins */ 
+/* BucketCompare
+Description:
+	For sorting: The bucket with the larger size wins
+Parameters: 
+	a, b: Buckets whose size we want to compare
+Returns: 
+	Value indicating the larger of the buckets - to pass to the sort method 
+*/ 
 int BucketCompare(const void* a, const void* b) {
 	const bucket *elem1 = a;
 	const bucket *elem2 = b;
@@ -213,6 +295,12 @@ int BucketCompare(const void* a, const void* b) {
 	return elem2->size - elem1->size; 
 }
 
+/* FreeKeys
+Description:
+	Frees a linked list of keys
+Parameters:
+	head: The head of the linked list of keys to free
+*/
 void FreeKeys(p_keynode head) {
 	p_keynode current = head; 
 	p_keynode temp; 
