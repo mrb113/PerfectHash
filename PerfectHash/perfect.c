@@ -73,7 +73,7 @@ int PerfectHash(p_kvp input, int* lookuptable, p_kvp hashtable, int length) {
 			break; 
 		}
 		seed = FindSeed(&buckets[i], hashtable, tablesize);
-		if (seed == -1) {
+		if (seed == FAILURE) {
 			goto Cleanup;
 		}
 		// Add the seed to the lookup table 
@@ -104,60 +104,71 @@ int FindSeed(p_bucket b, p_kvp hashtable, int tablesize) {
 
 	p_kvp k = b->keyvalue;
 	int seed = 1; 
-	int lookupslot = Hash(k->key, 0) & (tablesize - 1);
-	int hashslot, seedfound; 
 	
 	// Start looking for a seed
 	while (1) {
-		k = b->keyvalue;
-		seedfound = -1; 		
+		k = b->keyvalue;	
 
 		// If we have more than one kvp in a bucket, make sure they won't collide with each other.
-		if (b->size > 1) {
-			int* values = malloc(tablesize * sizeof(int));
-			if (values == NULL) {
-				return FAILURE; 
-			}
-			memset(values, 0xff, tablesize * sizeof(int));
-			int i = 0; 
-			
-			// Check each value for collisions with others in the bucket
-			while (k != NULL) {
-				if (values[i] != -1) {
-					seedfound = 0;
-					seed++;
-					break;
-				}
-				values[i] = Hash(k->key, seed) & (tablesize - 1);	
-				
-				k = k->next;
-				i++; 
-			}
-			free(values);
-
-			// Try the next seed if we are unsuccessful here
-			if (seedfound == 0) {
-				continue;
-			}			
-
-			k = b->keyvalue;
+		if (b->size > 1 && VerifyNoBucketCollisions(b, tablesize, seed) == FAILURE) {
+			seed++; 
+			continue; 
 		}		
-		// Check to see if our new seed generates collisions
-		while (k != NULL) {
-			hashslot = Hash(k->key, seed) & (tablesize - 1);
-			if (hashtable[hashslot].key != -1) {
-				seedfound = 0;
-				seed++;
-				break; 
-			}
-			k = k->next;
-		}
-		if (seedfound == 0) {
+
+		// Check to see if our new seed generates collisions with values in the existing hash table		
+		if (VerifyNoHashTableCollisions(b, hashtable, tablesize, seed) == FAILURE) {
+			seed++; 
 			continue; 
 		}
 		return seed; 
 	}	
 	return FAILURE; 
+}
+
+/* When testing a new seed, check that it won't cause collisions between any keys in the bucket */
+int VerifyNoBucketCollisions(p_bucket b, int tablesize, int seed) {
+	int exitCode = FAILURE; 
+
+	int* values = malloc(tablesize * sizeof(int));
+	if (values == NULL) {
+		return exitCode;
+	}
+
+	// Fill values[] with -1: 
+	memset(values, 0xff, tablesize * sizeof(int));
+
+	int i = 0;
+	p_kvp k = b->keyvalue; 
+	// Check each value for collisions with others in the bucket
+	while (k != NULL) {
+		if (values[i] != -1) {
+			goto Cleanup; 
+		}
+		values[i] = Hash(k->key, seed) & (tablesize - 1);
+		k = k->next;
+		i++;
+	}
+	exitCode = SUCCESS; 
+
+Cleanup: 
+	if (values) {
+		free(values);
+	}	
+
+	return exitCode; 
+}
+
+int VerifyNoHashTableCollisions(p_bucket b, p_kvp hashtable, int tablesize, int seed) {
+	p_kvp k = b->keyvalue; 
+	int hashslot; 
+	while (k != NULL) {
+		hashslot = Hash(k->key, seed) & (tablesize - 1);
+		if (hashtable[hashslot].key != -1) {
+			return FAILURE; 
+		}
+		k = k->next;
+	}
+	return SUCCESS; 
 }
 
 /* Adds a key/value pair node to the beginning of the bucket */
@@ -222,9 +233,9 @@ int BucketCompare(const void* a, const void* b) {
 void FreeKeyValues(p_kvp k) {
 	p_kvp current = k; 
 	p_kvp temp; 
-	while (k != NULL) {
+	while (current != NULL) {
 		temp = current; 
+		current = current->next;
 		free(temp); 
-		current = current->next; 
 	}
 }

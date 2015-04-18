@@ -29,6 +29,8 @@ typedef struct BUCKET {
 } bucket, *p_bucket;
 
 int PerfectHash(p_kvp input, int* lookuptable, p_kvp hashtable, int length);
+int VerifyNoBucketCollisions(p_bucket b, int tablesize, int seed);
+int VerifyNoHashTableCollisions(p_bucket b, p_kvp hashtable, int tablesize, int seed);
 uint Hash(uint a, uint seed);
 int NextPowerOfTwo(int v);
 uint Lookup(uint key, int* lookuptable, p_kvp hashtable); 
