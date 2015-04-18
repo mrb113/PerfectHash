@@ -33,7 +33,7 @@ int VerifyNoBucketCollisions(p_bucket b, int tablesize, int seed);
 int VerifyNoHashTableCollisions(p_bucket b, p_kvp hashtable, int tablesize, int seed);
 uint Hash(uint a, uint seed);
 int NextPowerOfTwo(int v);
-uint Lookup(uint key, int* lookuptable, p_kvp hashtable); 
+uint Lookup(uint key, int* lookuptable, p_kvp hashtable, int tablesize); 
 int AddNodeToBucket(p_bucket b, uint key, uint value);
 int BucketCompare(const void* a, const void* b); 
 int FindSeed(p_bucket b, p_kvp hashtable, int tablesize);

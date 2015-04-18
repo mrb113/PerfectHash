@@ -6,7 +6,7 @@ int PerfectHash(p_kvp input, int* lookuptable, p_kvp hashtable, int length) {
 
 	// If we input too many keys, fail
 	if (length > MAX_INPUT) {
-		return exitCode; 
+		return FAILURE; 
 	}
 	
 	const int tablesize = NextPowerOfTwo(length); 
@@ -139,6 +139,7 @@ int VerifyNoBucketCollisions(p_bucket b, int tablesize, int seed) {
 
 	int slot;
 	p_kvp k = b->keyvalue; 
+
 	// Check each value for collisions with others in the bucket
 	while (k != NULL) {
 		slot = Hash(k->key, seed) & (tablesize - 1);
@@ -192,14 +193,14 @@ int AddNodeToBucket(p_bucket b, uint key, uint value) {
 }
 
 /* Return a value in the hash table given a key */
-uint Lookup(uint key, int* lookuptable, p_kvp hashtable) {
+uint Lookup(uint key, int* lookuptable, p_kvp hashtable, int tablesize) {
 	
 	// Grab the hash function seed from the lookup table	
-	int lookupslot = (int)Hash(key, 0) & (length(lookuptable) - 1);
+	int lookupslot = (int)Hash(key, 0) & (tablesize - 1);
 	int seed = lookuptable[lookupslot];
 
 	// Get the actual value from the hash table
-	int valueslot = (int)Hash(key, seed) & (length(hashtable) - 1);
+	int valueslot = (int)Hash(key, seed) & (tablesize - 1);
 
 	int value = hashtable[valueslot].value;
 	return value; 	
