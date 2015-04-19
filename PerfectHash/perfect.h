@@ -10,11 +10,14 @@ typedef unsigned int uint;
 /* 2^30: Largest signed integer power of 2 */
 #define MAX_INPUT 1073741824
 
+// TODO magic number
+#define MAX_TRIES 100000
+
 /* Exit codes */
 #define FAILURE 0
 #define SUCCESS 1
 
-/* Key node*/
+/* Key node */
 typedef struct KEY_NODE {
 	uint key; 
 	struct KEY_NODE *next; 
@@ -23,9 +26,14 @@ typedef struct KEY_NODE {
 /* Bucket contains list of keys that collide with original hash function */
 typedef struct BUCKET {
 	p_keynode head; 
-	int collisionvalue; 
+	int slot; 
 	int size; 
 } bucket, *p_bucket;
+
+typedef struct LOOKUP_TABLE {
+	uint* table; 
+	int tablesize; 
+} lookup, *p_lookup;
 
 uint Hash(uint a, uint seed);
 
