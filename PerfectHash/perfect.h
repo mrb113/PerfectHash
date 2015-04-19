@@ -49,3 +49,4 @@ int BucketCompare(const void* a, const void* b);
 void FreeKeys(p_keynode head);
 lookup CreateEmptyLookupTable(int length); 
 void FreeLookupTable(lookup lookuptable);
+void UndoCollisionTableAdd(p_keynode head, p_keynode final, char* collisions, int seed, int tablesize);

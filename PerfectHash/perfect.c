@@ -40,13 +40,13 @@ int GeneratePerfectHash(uint* input, lookup lookuptable, int length) {
 		if (AddNodeToBucket(&buckets[slot], input[i]) == FAILURE) {
 			goto Cleanup; 
 		}		
-	} 
+	} 	
 
 	// Sort the buckets
 	// NOTE: Implementing a version of radix sort may be more efficient than quick sort
 	// For time, I'm leaving it at quick sort
 	qsort(buckets, tablesize, sizeof(bucket), BucketCompare);
-	
+
 	// If the largest bucket is of size 1, we already have no collisions
 	if (buckets[0].size == 1) {
 		// Create lookup table 
