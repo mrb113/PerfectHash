@@ -37,13 +37,13 @@ typedef struct LOOKUP_TABLE {
 
 uint Hash(uint a, uint seed);
 
-int GeneratePerfectHash(uint* input, int* lookuptable, int length);
+int GeneratePerfectHash(uint* input, lookup lookuptable, int length);
 int FindSeed(p_bucket b, char* collisions, int tablesize);
-int VerifyNoBucketCollisions(p_bucket b, int tablesize, int seed);
+int VerifyNoBucketCollisions(p_bucket b, int tablesize, char* collisions, int seed);
 int VerifyNoHashTableCollisions(p_bucket b, char* collisiontable, int tablesize, int seed);
 int AddNodeToBucket(p_bucket b, uint key);
-uint Lookup(uint key, int* lookuptable, uint* hashtable, int tablesize);
-void Insert(uint key, uint value, int seed, uint* hashtable, int tablesize);
+uint Lookup(uint key, lookup lookuptable, uint* hashtable);
+void Insert(uint key, uint value, lookup lookuptable, uint* hashtable);
 int NextPowerOfTwo(int v);
 int BucketCompare(const void* a, const void* b);
 void FreeKeys(p_keynode head);

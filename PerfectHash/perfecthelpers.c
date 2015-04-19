@@ -2,25 +2,26 @@
 
 /* FindSeed
 Description:
-Find a new seed that works for all of the values in the bucket
+	Find a new seed that works for all of the values in the bucket
 Parameters:
-b: Pointer to the bucket for which we are finding a seed that generates no collisions
-collisiontable: Table storing which slots in the hash table are taken
-tablesize: Number of elements in the hash table
+	b: Pointer to the bucket for which we are finding a seed that generates no collisions
+	collisiontable: Table storing which slots in the hash table are taken
+	tablesize: Number of elements in the hash table
 Returns:
-0 on failure, 1 on success
+	0 on failure, 1 on success
 */
 int FindSeed(p_bucket b, char* collisions, int tablesize) {
-
 	p_keynode key = b->head;
 	int seed = 1;
+	int tries = 0; 
 
 	// Start looking for a seed
-	while (1) {
+	while (tries < MAX_TRIES) {
+
 		key = b->head;
 
 		// If we have more than one key in a bucket, make sure they won't collide with each other.
-		if (b->size > 1 && VerifyNoBucketCollisions(b, tablesize, seed) == FAILURE) {
+		if (b->size > 1 && VerifyNoBucketCollisions(b, tablesize, collisions, seed) == FAILURE) {
 			seed++;
 			continue;
 		}
@@ -30,76 +31,81 @@ int FindSeed(p_bucket b, char* collisions, int tablesize) {
 			seed++;
 			continue;
 		}
-		free(collisions);
 		return seed;
 	}
-	free(collisions);
 	return FAILURE;
+}
+
+/* UndoCollisionTableAdd
+Description: 
+	After an unsuccessful attempt at finding a seed, unwind the operations we just did on the collision table. 
+Parameters:
+	head: First node of the values we need to delete
+	final: The node that caused the failure
+	collisions: The collision table
+	seed: Seed to use to undo
+	tablesize: Size of the collision table
+*/
+void UndoCollisionTableAdd(p_keynode head, p_keynode final, char* collisions, int seed, int tablesize){
+	p_keynode k = head; 
+	while (k->next != final) {
+		int slot = Hash(k->key, seed) & (tablesize - 1);		
+		// Mark the spot as empty
+		collisions[slot] = 0;	
+		k = k->next; 
+	}	
 }
 
 /* VerifyNoBucketCollisions
 Description:
-When testing a new seed, check that it won't cause collisions between any keys in the bucket.
+	When testing a new seed, check that it won't cause collisions between any keys in the bucket.
 Parameters:
-b: Pointer to the bucket for which we are testing a new seed value
-tablesize: The number of elements in the hash table
-seed: The seed to test
+	b: Pointer to the bucket for which we are testing a new seed value
+	tablesize: The number of elements in the hash table
+	seed: The seed to test
 Returns:
-0 on failure, 1 on success
+	0 on failure, 1 on success
 */
-int VerifyNoBucketCollisions(p_bucket b, int tablesize, int seed) {
-	int exitCode = FAILURE;
-
-	// Create a temporary table to check the bucket values
-	char* values = malloc(tablesize * sizeof(char));
-	if (values == NULL) {
-		return FAILURE;
-	}
-
-	// Fill values[] with -1: 
-	memset(values, 0xff, tablesize * sizeof(char));
-
+int VerifyNoBucketCollisions(p_bucket b, int tablesize, char* collisions, int seed) {	
 	int slot;
 	p_keynode k = b->head;
 
 	// Check each value for collisions with others in the bucket
 	while (k != NULL) {
 		slot = Hash(k->key, seed) & (tablesize - 1);
-		if (values[slot] != -1) {
-			goto Cleanup;
+		if (collisions[slot] != 0) {
+			UndoCollisionTableAdd(b->head, k, collisions, seed, tablesize);
+			return FAILURE;
 		}
 		// Mark the spot as full
-		values[slot] = 1;
+		collisions[slot] = 1;
 		k = k->next;
 	}
-	exitCode = SUCCESS;
-
-Cleanup:
-	if (values) {
-		free(values);
-	}
-	return exitCode;
+	return SUCCESS;
 }
 
 /* VerifyNoHashTableCollisions
 Description:
-When testing a new seed, check that it won't cause collisions between any keys in the bucket.
+	When testing a new seed, check that it won't cause collisions between any keys in the bucket.
 Parameters:
-b: Pointer to the bucket for which we are testing a new seed value
-collisiontable: Represents
-tablesize: The number of elements in the hash table
-seed: The seed to test
+	b: Pointer to the bucket for which we are testing a new seed value
+	collisiontable: Represents
+	tablesize: The number of elements in the hash table
+	seed: The seed to test
 Returns:
-0 on failure, 1 on success
+	0 on failure, 1 on success
 */
-int VerifyNoHashTableCollisions(p_bucket b, char* collisiontable, int tablesize, int seed) {
+int VerifyNoHashTableCollisions(p_bucket b, char* collisions, int tablesize, int seed) {
 	p_keynode k = b->head;
 	int hashslot;
 	while (k != NULL) {
 		hashslot = Hash(k->key, seed) & (tablesize - 1);
-		if (collisiontable[hashslot] != -1) {
+		if (collisions[hashslot] != 0) {
+			UndoCollisionTableAdd(b->head, k, collisions, seed, tablesize);
 			return FAILURE;
 		}
+		// Mark the spot as full
+		collisions[hashslot] = 1; 
 		k = k->next;
 	}
 	return SUCCESS;
@@ -107,23 +113,22 @@ int VerifyNoHashTableCollisions(p_bucket b, char* collisiontable, int tablesize,
 
 /* AddNodeToBucket
 Description:
-Adds a key pair node to the beginning of the bucket
+	Adds a key pair node to the beginning of the bucket
 Parameters:
-b: Pointer to the bucket to add
-key: Key to add to the bucket
+	b: Pointer to the bucket to add
+	key: Key to add to the bucket
 Returns:
-0 on failure, 1 on success
+	0 on failure, 1 on success
 */
 int AddNodeToBucket(p_bucket b, uint key) {
 
-	p_keynode head = b->head;
 	p_keynode new_head = (p_keynode)malloc(sizeof(key));
 
 	if (new_head == NULL) {
 		return FAILURE;
 	}
 	new_head->key = key;
-	new_head->next = head;
+	new_head->next = b->head;
 
 	b->head = new_head;
 	// Increase bucket size
@@ -133,11 +138,11 @@ int AddNodeToBucket(p_bucket b, uint key) {
 
 /* NextPowerOfTwo
 Description:
-Round an integer up to the next power of 2
+	Round an integer up to the next power of 2
 Parameters:
-v: The integer to round up
+	v: The integer to round up
 Returns:
-The rounded-up value of the integer
+	The rounded-up value of the integer
 */
 int NextPowerOfTwo(int v) {
 	v--;
@@ -152,11 +157,11 @@ int NextPowerOfTwo(int v) {
 
 /* BucketCompare
 Description:
-For sorting: The bucket with the larger size wins
+	For sorting: The bucket with the larger size wins
 Parameters:
-a, b: Buckets whose size we want to compare
+	a, b: Buckets whose size we want to compare
 Returns:
-Value indicating the larger of the buckets - to pass to the sort method
+	Value indicating the larger of the buckets - to pass to the sort method
 */
 int BucketCompare(const void* a, const void* b) {
 	const bucket *elem1 = a;
@@ -167,17 +172,15 @@ int BucketCompare(const void* a, const void* b) {
 
 /* FreeKeys
 Description:
-Frees a linked list of keys
+	Frees a linked list of keys
 Parameters:
-head: The head of the linked list of keys to free
+	head: The head of the linked list of keys to free
 */
 void FreeKeys(p_keynode head) {
-	p_keynode current = head;
 	p_keynode temp;
-	while (current != NULL) {
-		temp = current;
-		current = current->next;
+	while (head != NULL) {
+		temp = head;
+		head = head->next;
 		free(temp);
 	}
-	head = NULL;
 }
