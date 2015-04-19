@@ -11,8 +11,7 @@ Returns:
 	0 on failure, 1 on success
 */
 int GeneratePerfectHash(uint* input, lookup lookuptable, int length) {
-
-	int exitCode = FAILURE; 
+	 
 	// If we input too many keys, fail
 	if (length > MAX_INPUT) {
 		return FAILURE; 
@@ -23,6 +22,8 @@ int GeneratePerfectHash(uint* input, lookup lookuptable, int length) {
 	if (lookuptable.tablesize != tablesize) {
 		return FAILURE; 
 	}
+
+	int exitCode = FAILURE;
 
 	// Create array of buckets and collision table
 	bucket* buckets = calloc(tablesize, sizeof(bucket));
@@ -49,7 +50,7 @@ int GeneratePerfectHash(uint* input, lookup lookuptable, int length) {
 
 	// If the largest bucket is of size 1, we already have no collisions
 	if (buckets[0].size == 1) {
-		// Create lookup table 
+		// Lookup table is all 0s 
 		memset(lookuptable.table, 0, tablesize * sizeof(int));
 		exitCode = SUCCESS; 
 		goto Cleanup; 
@@ -98,6 +99,7 @@ Returns:
 	The value from the hash table
 */
 uint Lookup(uint key, lookup lookuptable, uint* hashtable) {
+
 	// Grab the hash function seed from the lookup table	
 	int lookupslot = (int)Hash(key, 0) & (lookuptable.tablesize - 1);
 	int seed = lookuptable.table[lookupslot];
