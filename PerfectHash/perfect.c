@@ -5,7 +5,7 @@ Description:
 	Generate a perfect hash function for a set of keys
 Parameters: 
 	input: The set of keys for which to generate a hash function
-	lookuptable: Table in which to place the seed values for our perfect hash function
+	lookuptable: Table in which to place the seed values for our perfect hash function. Must have size of power of 2. 
 	length: The number of elements in the input
 Returns: 
 	0 on failure, 1 on success
@@ -17,9 +17,12 @@ int GeneratePerfectHash(uint* input, lookup lookuptable, int length) {
 	if (length > MAX_INPUT) {
 		return FAILURE; 
 	}
-	
+
+	// If table size isn't a power of 2, fail. 	
 	const int tablesize = NextPowerOfTwo(length); 
-	lookuptable.tablesize = tablesize; 
+	if (lookuptable.tablesize != tablesize) {
+		return FAILURE; 
+	}
 
 	// Create array of buckets and collision table
 	bucket* buckets = calloc(tablesize, sizeof(bucket));
@@ -120,4 +123,37 @@ void Insert(uint key, uint value, lookup lookuptable, uint* hashtable) {
 	int seed = lookuptable.table[lookupslot];
 	int hashslot = Hash(key, seed) & (lookuptable.tablesize - 1);
 	hashtable[hashslot] = value; 
+}
+
+/* CreateEmptyLookupTable
+Description: 
+	Creates an empty lookup table. When finished, the calling function must call FreeLookupTable()
+Parameters: 
+	inputlength: Number of elements in the input keys
+Returns: 
+	An empty lookup table. Tablesize = -1 if allocation failed. 
+	Otherwise, tablesize is the next largest power of 2 rounded up from inputlength. 
+*/
+lookup CreateEmptyLookupTable(int inputlength) {
+	lookup lookuptable; 
+	int tablesize = NextPowerOfTwo(inputlength);
+	lookuptable.table = calloc(tablesize, sizeof(uint));
+	if (lookuptable.table == NULL) {
+		lookuptable.tablesize = -1; 
+	}
+	else {
+		lookuptable.tablesize = tablesize; 
+	}
+	return lookuptable; 
+}
+
+/* FreeLookupTable
+Description: 
+	Frees a previously created lookup table
+Parameters: 
+	lookuptable: Lookup table to free
+*/
+void FreeLookupTable(lookup lookuptable) {
+	free(lookuptable.table);
+	lookuptable.tablesize = -1; 
 }

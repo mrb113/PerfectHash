@@ -47,3 +47,5 @@ void Insert(uint key, uint value, lookup lookuptable, uint* hashtable);
 int NextPowerOfTwo(int v);
 int BucketCompare(const void* a, const void* b);
 void FreeKeys(p_keynode head);
+lookup CreateEmptyLookupTable(int length); 
+void FreeLookupTable(lookup lookuptable);
