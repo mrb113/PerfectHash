@@ -118,7 +118,7 @@ Parameters:
 	key: Key whose associated value we want to insert
 	value: Value to insert
 	lookuptable: Lookup table for the perfect hash function
-	hashtable: Table to insert values into 
+	hashtable: Table to insert values into. Must be the same size as lookuptable. 
 */
 void Insert(uint key, uint value, lookup lookuptable, uint* hashtable) {
 	int lookupslot = Hash(key, 0) & (lookuptable.tablesize - 1);

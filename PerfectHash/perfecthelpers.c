@@ -1,5 +1,5 @@
-//include "perfect.h"
-#include "test.h"
+#include "perfect.h"
+
 /* FindSeed
 Description:
 	Find a new seed that works for all of the values in the bucket
@@ -13,17 +13,18 @@ Returns:
 int FindSeed(p_bucket b, char* collisions, int tablesize) {	
 	p_keynode key = b->head;
 	int seed = 1;
-
 	// Start looking for a seed
 	while (seed < MAX_TRIES) {
-
 		key = b->head;		
+
 		// If we have more than one key in a bucket, make sure they won't collide with each other.
-		if (b->size > 1 && VerifyNoBucketCollisions(b, tablesize, collisions, seed) == FAILURE) {
-			seed++;
-			continue;
+		if (b->size > 1) {
+			if (VerifyNoBucketCollisions(b, tablesize, collisions, seed) == FAILURE) {
+				seed++;
+				continue;
+			}
+			UndoCollisionTableAdd(b->head, NULL, collisions, seed, tablesize);
 		}
-		UndoCollisionTableAdd(b->head, NULL, collisions, seed, tablesize);
 		
 		// Check to see if our new seed generates collisions with values in the existing hash table		
 		if (VerifyNoHashTableCollisions(b, collisions, tablesize, seed) == FAILURE) {
@@ -45,13 +46,7 @@ Parameters:
 	seed: Seed to use to undo
 	tablesize: Size of the collision table
 */
-void UndoCollisionTableAdd(p_keynode head, p_keynode final, char* collisions, int seed, int tablesize){
-	if (head == final) {
-		int slot = Hash(head->key, seed) & (tablesize - 1);
-		// Mark the spot as empty
-		collisions[slot] = 0;
-		return; 
-	}
+void UndoCollisionTableAdd(p_keynode head, p_keynode final, char* collisions, int seed, int tablesize){		
 	p_keynode k = head; 
 	while (k != final) {
 		int slot = Hash(k->key, seed) & (tablesize - 1);		
