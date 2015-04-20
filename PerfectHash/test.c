@@ -1,19 +1,44 @@
 #include "test.h"
 
 void main() {
-	int length = 3; 
-	uint input[3] = { 1, 3, 4 };
+	// Michelle's hacky "test as you go" setup
+	// No real test framework yet
+
+	struct timeb start, end;
+	int diff;
+
+	// Round up the current # of keys for link /dump /headers /loadconfig mshtml.dll (~37000)
+	int length = 40000;
+	uint input[40000];
+	uint values[40000];
+	for (int i = 0; i < length; i++) {
+		input[i] = i; 
+		values[i] = i+1; 
+	}
 	
 	lookup lookuptable = CreateEmptyLookupTable(length);
-	if (lookuptable.tablesize == -1) {
-		printf("Lookup table creation failed\n");
+	assert(lookuptable.tablesize != -1);
+
+	ftime(&start);
+	assert(GeneratePerfectHash(input, lookuptable, length) != FAILURE);
+	ftime(&end);
+
+	diff = (int)(1000.0 * (end.time - start.time)+ (end.millitm - start.millitm));
+	printf("Time taken in milliseconds to generate perfect hash function: %u\n", diff);
+	printf("Inserting keys into hash table\n");
+	uint *hashtable = malloc(lookuptable.tablesize * sizeof(uint));
+	for (int i = 0; i < length; i++) {
+		Insert(input[i], values[i], lookuptable, hashtable);
 	}
-	printf("Original hash: key: 1. Hash: %d. key 3. Hash: %d. key 4. Hash: %d\n", Hash(1, 0) & (lookuptable.tablesize - 1), Hash(3, 0) & (lookuptable.tablesize - 1), Hash(4, 0) & (lookuptable.tablesize - 1)); 
-	printf("with 1 hash: key: 1. Hash: %d. key 3. Hash: %d. key 4. Hash: %d\n", Hash(1, 1) & (lookuptable.tablesize - 1), Hash(3, 1) & (lookuptable.tablesize - 1), Hash(4, 1) & (lookuptable.tablesize - 1));
-	if (GeneratePerfectHash(input, lookuptable, length) == FAILURE){
-		printf("Hash creation failed");
-	}
-	printlookuptable(&lookuptable, lookuptable.tablesize);
+	printf("Looking up value at key 5090: \n");
+	int key = input[5090]; 
+	int val = Lookup(key, lookuptable, hashtable);
+	printf("Found value %d\n", val);
+
+	// Values are all key+1
+	assert(val == key+1);
+	FreeLookupTable(lookuptable);
+	free(hashtable);
 	getchar(); 
 }
 
