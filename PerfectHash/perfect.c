@@ -1,3 +1,7 @@
+/* Perfect.c
+File description: 
+	Contains the functions in the PerfectHash API 
+*/
 #include "perfect.h"
 
 /* GeneratePerfectHash 
