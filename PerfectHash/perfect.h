@@ -37,9 +37,10 @@ typedef struct LOOKUP_TABLE {
 } lookup, *p_lookup;
 
 uint Hash(uint a, uint seed);
+uint HashZeroInline(uint a);
 
 int GeneratePerfectHash(uint* input, lookup lookuptable, int length);
-int FindSeed(p_bucket b, char* collisions, int tablesize);
+char FindSeed(p_bucket b, char* collisions, int tablesize);
 int VerifyNoBucketCollisions(p_bucket b, int tablesize, char* collisions, int seed);
 int VerifyNoHashTableCollisions(p_bucket b, char* collisiontable, int tablesize, int seed);
 int AddNodeToBucket(p_bucket b, uint key);

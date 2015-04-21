@@ -8,14 +8,14 @@ Parameters:
 	collisiontable: Table storing which slots in the hash table are taken
 	tablesize: Number of elements in the hash table
 Returns:
-	0 on failure, 1 on success
+	UCHAR_MAX on failure, seed on success
 */
-int FindSeed(p_bucket b, char* collisions, int tablesize) {	
+char FindSeed(p_bucket b, char* collisions, int tablesize) {	
 	p_keynode key = b->head;
-	int seed = 1;
+	int seed = 0;
 	// Start looking for a seed
-	while (seed <= UCHAR_MAX) {
-		key = b->head;		
+	while (seed < UCHAR_MAX) {
+		key = b->head;
 
 		// If we have more than one key in a bucket, make sure they won't collide with each other.
 		if (b->size > 1) {
@@ -25,7 +25,7 @@ int FindSeed(p_bucket b, char* collisions, int tablesize) {
 			}
 			UndoCollisionTableAdd(b->head, NULL, collisions, seed, tablesize);
 		}
-		
+
 		// Check to see if our new seed generates collisions with values in the existing hash table		
 		if (VerifyNoHashTableCollisions(b, collisions, tablesize, seed) == FAILURE) {
 			seed++;
@@ -33,7 +33,7 @@ int FindSeed(p_bucket b, char* collisions, int tablesize) {
 		}
 		return seed;
 	}
-	return FAILURE;
+	return UCHAR_MAX;
 }
 
 /* UndoCollisionTableAdd

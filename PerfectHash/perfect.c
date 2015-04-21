@@ -17,6 +17,7 @@ Returns:
 int GeneratePerfectHash(uint* input, lookup lookuptable, int length) {
 	 
 	// If we input too many keys, fail
+	// In practice, this is still too large of a number for most hardware to handle. 
 	if (length > MAX_INPUT) {
 		return FAILURE; 
 	}
@@ -38,7 +39,7 @@ int GeneratePerfectHash(uint* input, lookup lookuptable, int length) {
 
 	// Create buckets by regular hashing
 	for (int i = 0; i < length; i++) {
-		int slot = (int)Hash(input[i], 0) & (tablesize - 1);
+		int slot = (int)HashZeroInline(input[i]) & (tablesize - 1);
 		buckets[slot].slot = slot; 
 
 		// Add the key/value pair to the correct bucket
@@ -61,7 +62,7 @@ int GeneratePerfectHash(uint* input, lookup lookuptable, int length) {
 	}
 
 	// For each bucket, find a seed that works for no collisions
-	int seed;
+	uchar seed;
 	for (int i = 0; i < tablesize; i++) {
 
 		// If we only have empty buckets left, stop.
@@ -69,7 +70,7 @@ int GeneratePerfectHash(uint* input, lookup lookuptable, int length) {
 			break; 
 		}
 		seed = FindSeed(&buckets[i], collisions, tablesize);
-		if (seed == FAILURE) {
+		if (seed == UCHAR_MAX) {
 			goto Cleanup;
 		}
 		// Add the seed to the lookup table 
@@ -105,11 +106,18 @@ Returns:
 uint Lookup(uint key, lookup lookuptable, uint* hashtable) {
 
 	// Grab the hash function seed from the lookup table	
-	int lookupslot = (int)Hash(key, 0) & (lookuptable.tablesize - 1);
+	int lookupslot = (int)HashZeroInline(key) & (lookuptable.tablesize - 1);
 	int seed = lookuptable.table[lookupslot];
+	int valueslot;
 
 	// Get the actual value from the hash table
-	int valueslot = (int)Hash(key, seed) & (lookuptable.tablesize - 1);
+	if (seed == 0) {
+		// Don't need to hash again
+		valueslot = lookupslot; 
+	}
+	else {
+		 valueslot = (int)Hash(key, seed) & (lookuptable.tablesize - 1);
+	}	
 
 	int value = hashtable[valueslot];
 	return value; 	
