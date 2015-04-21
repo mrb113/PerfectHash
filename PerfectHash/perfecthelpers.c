@@ -14,7 +14,7 @@ int FindSeed(p_bucket b, char* collisions, int tablesize) {
 	p_keynode key = b->head;
 	int seed = 1;
 	// Start looking for a seed
-	while (seed < MAX_TRIES) {
+	while (seed <= UCHAR_MAX) {
 		key = b->head;		
 
 		// If we have more than one key in a bucket, make sure they won't collide with each other.

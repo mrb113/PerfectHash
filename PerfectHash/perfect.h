@@ -3,6 +3,7 @@
 #include <string.h>
 
 typedef unsigned int uint;
+typedef unsigned char uchar; 
 
 /* Macro for number of elements in an array */
 #define length(array) (sizeof(array)/sizeof(*(array)))
@@ -31,7 +32,7 @@ typedef struct BUCKET {
 } bucket, *p_bucket;
 
 typedef struct LOOKUP_TABLE {
-	uint* table; 
+	uchar* table; 
 	int tablesize; 
 } lookup, *p_lookup;
 

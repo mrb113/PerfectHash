@@ -143,7 +143,7 @@ Returns:
 lookup CreateEmptyLookupTable(int inputlength) {
 	lookup lookuptable; 
 	int tablesize = NextPowerOfTwo(inputlength);
-	lookuptable.table = calloc(tablesize, sizeof(uint));
+	lookuptable.table = calloc(tablesize, sizeof(uchar));
 	if (lookuptable.table == NULL) {
 		lookuptable.tablesize = -1; 
 	}
