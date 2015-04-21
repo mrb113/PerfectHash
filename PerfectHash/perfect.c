@@ -39,7 +39,7 @@ int GeneratePerfectHash(uint* input, lookup lookuptable, int length) {
 
 	// Create buckets by regular hashing
 	for (int i = 0; i < length; i++) {
-		int slot = (int)HashZeroInline(input[i]) & (tablesize - 1);
+		int slot = (int)HashZeroInline4(input[i]) & (tablesize - 1);
 		buckets[slot].slot = slot; 
 
 		// Add the key/value pair to the correct bucket
@@ -106,8 +106,8 @@ Returns:
 uint Lookup(uint key, lookup lookuptable, uint* hashtable) {
 
 	// Grab the hash function seed from the lookup table	
-	int lookupslot = (int)HashZeroInline(key) & (lookuptable.tablesize - 1);
-	int seed = lookuptable.table[lookupslot];
+	int lookupslot = (int)HashZeroInline4(key) & (lookuptable.tablesize - 1);
+	uchar seed = lookuptable.table[lookupslot];
 	int valueslot;
 
 	// Get the actual value from the hash table
@@ -116,7 +116,7 @@ uint Lookup(uint key, lookup lookuptable, uint* hashtable) {
 		valueslot = lookupslot; 
 	}
 	else {
-		 valueslot = (int)Hash(key, seed) & (lookuptable.tablesize - 1);
+		 valueslot = (int)Hash4(key, seed) & (lookuptable.tablesize - 1);
 	}	
 
 	int value = hashtable[valueslot];
@@ -133,9 +133,9 @@ Parameters:
 	hashtable: Table to insert values into. Must be the same size as lookuptable. 
 */
 void Insert(uint key, uint value, lookup lookuptable, uint* hashtable) {
-	int lookupslot = Hash(key, 0) & (lookuptable.tablesize - 1);
+	int lookupslot = HashZeroInline4(key) & (lookuptable.tablesize - 1);
 	int seed = lookuptable.table[lookupslot];
-	int hashslot = Hash(key, seed) & (lookuptable.tablesize - 1);
+	int hashslot = Hash4(key, seed) & (lookuptable.tablesize - 1);
 	hashtable[hashslot] = value; 
 }
 

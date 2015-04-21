@@ -49,7 +49,7 @@ Parameters:
 void UndoCollisionTableAdd(p_keynode head, p_keynode final, char* collisions, int seed, int tablesize){		
 	p_keynode k = head; 
 	while (k != final) {
-		int slot = Hash(k->key, seed) & (tablesize - 1);		
+		int slot = Hash4(k->key, seed) & (tablesize - 1);		
 		// Mark the spot as empty
 		collisions[slot] = 0;	
 		k = k->next; 
@@ -72,7 +72,7 @@ int VerifyNoBucketCollisions(p_bucket b, int tablesize, char* collisions, int se
 
 	// Check each value for collisions with others in the bucket
 	while (k != NULL) {
-		slot = Hash(k->key, seed) & (tablesize - 1);
+		slot = Hash4(k->key, seed) & (tablesize - 1);
 		if (collisions[slot] != 0) {
 			UndoCollisionTableAdd(b->head, k, collisions, seed, tablesize);
 			return FAILURE;
@@ -99,7 +99,7 @@ int VerifyNoHashTableCollisions(p_bucket b, char* collisions, int tablesize, int
 	p_keynode k = b->head;
 	int hashslot;
 	while (k != NULL) {
-		hashslot = Hash(k->key, seed) & (tablesize - 1);
+		hashslot = Hash4(k->key, seed) & (tablesize - 1);
 		if (collisions[hashslot] != 0) {
 			UndoCollisionTableAdd(b->head, k, collisions, seed, tablesize);
 			return FAILURE;

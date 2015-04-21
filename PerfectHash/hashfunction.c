@@ -26,3 +26,57 @@ uint HashZeroInline(uint a)
 	a = (a ^ 0xb55a4f09) ^ (a >> 16);
 	return a;
 }
+
+/* 4 shift function - zero inlined */
+uint HashZeroInline3(uint a)
+{
+	a = a ^ (a >> 4);
+	a = (a ^ 0) + (a << 5);
+	a = a ^ (a >> 11);
+	return a;
+}
+
+/* 4 shift function - zero inlined */
+uint Hash3(uint a, uint seed)
+{
+	a = a ^ (a >> 4);
+	a = (a ^ seed) + (a << 5);
+	a = a ^ (a >> 11);
+	return a;
+}
+
+uint HashZeroInline4(uint a)
+{
+	a = (a ^ 0) + (a << 4);
+	a = a ^ (a >> 10);
+	a = a + (a << 7);
+	a = a ^ (a >> 13);
+	return a;
+}
+
+uint Hash4(uint a, uint seed)
+{
+	a = (a ^ seed) + (a << 4);
+	a = a ^ (a >> 10);
+	a = a + (a << 7);
+	a = a ^ (a >> 13);
+	return a;
+}
+
+uint HashZeroInline5(uint a) {
+	a = (a) + (a << 8);
+	a = (a ^ 0xe4aa10ce) ^ (a >> 5);
+	a = (a + 0x9942f0a6) - (a << 14);
+	a = (a ^ 0x5aedd67d) ^ (a >> 3);
+	a = (a + 0x17bea992) + (a << 7);
+	return a;
+}
+
+uint Hash5(uint a, uint seed) {
+	a = (a + seed) + (a << 8);
+	a = (a ^ 0xe4aa10ce) ^ (a >> 5);
+	a = (a + 0x9942f0a6) - (a << 14);
+	a = (a ^ 0x5aedd67d) ^ (a >> 3);
+	a = (a + 0x17bea992) + (a << 7);
+	return a;
+}
