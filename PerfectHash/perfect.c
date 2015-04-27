@@ -64,7 +64,6 @@ int GeneratePerfectHash(uint* input, lookup lookuptable, int length) {
 	// For each bucket, find a seed that works for no collisions
 	uchar seed;
 	for (int i = 0; i < tablesize; i++) {
-
 		// If we only have empty buckets left, stop.
 		if (buckets[i].size == 0) {
 			break; 
@@ -80,6 +79,7 @@ int GeneratePerfectHash(uint* input, lookup lookuptable, int length) {
 	exitCode = SUCCESS;
 
 Cleanup:
+	// Free all allocated memory and return exit code
 	if (buckets) {
 		for (int i = 0; i < tablesize; i++) {
 			FreeKeys(buckets[i].head);
@@ -99,7 +99,6 @@ Parameters:
 	key: Key whose value we are looking up in the hash table 
 	lookuptable: Table containing
 	hashtable: The hash table containing values
-	tablesize: Number of elements in the hash table
 Returns: 
 	The value from the hash table
 */
@@ -163,7 +162,7 @@ lookup CreateEmptyLookupTable(int inputlength) {
 
 /* FreeLookupTable
 Description: 
-	Frees a previously created lookup table
+	Frees a previously allocated lookup table
 Parameters: 
 	lookuptable: Lookup table to free
 */
