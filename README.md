@@ -1,7 +1,9 @@
 # PerfectHash
 ####Perfect hash function generator for Windows in C
 
-PerfectHash is a performant library to generate a perfect hash function (i.e. no collisions) for a set of keys. Optimized for lookup.
+PerfectHash is a performant library to generate a perfect hash function (i.e. no collisions) for a set of keys. Optimized for lookup speed. 
+
+NOTE: This library does not generate a minimum perfect hash function because MPHFs are not performance-friendly. However, since this library always generates a table size that is a power of two, it will work out to be an MPHF if your number of keys is also a power of two. If you don't know what a minimum perfect hash function is, then you're probably a-okay to go ahead with this one. 
 
 ####How To Use
 0. Some (messy) tests are in test.c. The example generates a perfect hash function for the keys in kernellist.txt. NOTE: This wasn't designed to be a workable example and was for my own testing/performance measurement; in fact, I'd advise against using it right now. Making a better example is on my todo list.
