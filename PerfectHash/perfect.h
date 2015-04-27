@@ -1,18 +1,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "hashfunction.h"
 
 typedef unsigned int uint;
 typedef unsigned char uchar; 
 
-/* Macro for number of elements in an array */
-#define length(array) (sizeof(array)/sizeof(*(array)))
-
 /* 2^30: Largest signed integer power of 2 */
 #define MAX_INPUT 1073741824
-
-// TODO magic number
-#define MAX_TRIES 100000
 
 /* Exit codes */
 #define FAILURE 0
@@ -36,25 +31,19 @@ typedef struct LOOKUP_TABLE {
 	int tablesize; 
 } lookup, *p_lookup;
 
-uint Hash(uint a, uint seed);
-uint HashZeroInline(uint a);
-
-uint HashZeroInline4(uint a);
-uint Hash4(uint a, uint seed);
-
-uint HashZeroInline5(uint a);
-uint Hash5(uint a, uint seed);
-
+/* Main functions */
 int GeneratePerfectHash(uint* input, lookup lookuptable, int length);
+uint Lookup(uint key, lookup lookuptable, uint* hashtable);
+void Insert(uint key, uint value, lookup lookuptable, uint* hashtable);
+lookup CreateEmptyLookupTable(int length);
+void FreeLookupTable(lookup lookuptable);
+
+/* Helper functions */
+int NextPowerOfTwo(int v);
+int BucketCompare(const void* a, const void* b);
+void FreeKeys(p_keynode head);
+void UndoCollisionTableAdd(p_keynode head, p_keynode final, char* collisions, int seed, int tablesize);
 char FindSeed(p_bucket b, char* collisions, int tablesize);
 int VerifyNoBucketCollisions(p_bucket b, int tablesize, char* collisions, int seed);
 int VerifyNoHashTableCollisions(p_bucket b, char* collisiontable, int tablesize, int seed);
 int AddNodeToBucket(p_bucket b, uint key);
-uint Lookup(uint key, lookup lookuptable, uint* hashtable);
-void Insert(uint key, uint value, lookup lookuptable, uint* hashtable);
-int NextPowerOfTwo(int v);
-int BucketCompare(const void* a, const void* b);
-void FreeKeys(p_keynode head);
-lookup CreateEmptyLookupTable(int length); 
-void FreeLookupTable(lookup lookuptable);
-void UndoCollisionTableAdd(p_keynode head, p_keynode final, char* collisions, int seed, int tablesize);
