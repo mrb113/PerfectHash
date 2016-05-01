@@ -4,7 +4,7 @@
 #include "hashfunction.h"
 
 typedef unsigned int uint;
-typedef unsigned char uchar; 
+typedef unsigned char uchar;
 
 /* 2^30: Largest signed integer power of 2 */
 #define MAX_INPUT 1073741824
@@ -15,20 +15,20 @@ typedef unsigned char uchar;
 
 /* Key node */
 typedef struct KEY_NODE {
-	uint key; 
-	struct KEY_NODE *next; 
+    uint key;
+    struct KEY_NODE *next;
 } keynode, *p_keynode;
 
 /* Bucket contains list of keys that collide with original hash function */
 typedef struct BUCKET {
-	p_keynode head; 
-	int slot; 
-	int size; 
+    p_keynode head;
+    int slot;
+    int size;
 } bucket, *p_bucket;
 
 typedef struct LOOKUP_TABLE {
-	uchar* table; 
-	int tablesize; 
+    uchar* table;
+    int tablesize;
 } lookup, *p_lookup;
 
 /* Main functions */

@@ -1,172 +1,172 @@
 /* Perfect.c
-File description: 
-	Contains the functions in the PerfectHash API 
+File description:
+    Contains the functions in the PerfectHash API
 */
 #include "perfect.h"
 
-/* GeneratePerfectHash 
-Description: 
-	Generate a perfect hash function for a set of keys
-Parameters: 
-	input: The set of keys for which to generate a hash function
-	lookuptable: Table in which to place the seed values for our perfect hash function. Must have size of power of 2. 
-	length: The number of elements in the input
-Returns: 
-	0 on failure, 1 on success
+/* GeneratePerfectHash
+Description:
+    Generate a perfect hash function for a set of keys
+Parameters:
+    input: The set of keys for which to generate a hash function
+    lookuptable: Table in which to place the seed values for our perfect hash function. Must have size of power of 2.
+    length: The number of elements in the input
+Returns:
+    0 on failure, 1 on success
 */
 int GeneratePerfectHash(uint* input, lookup lookuptable, int length) {
-	 
-	// If we input too many keys, fail
-	// In practice, this is still too large of a number for most hardware to handle. 
-	if (length > MAX_INPUT) {
-		return FAILURE; 
-	}
 
-	// If table size isn't a power of 2, fail. 	
-	const int tablesize = NextPowerOfTwo(length); 
-	if (lookuptable.tablesize != tablesize) {
-		return FAILURE; 
-	}
+    // If we input too many keys, fail
+    // In practice, this is still too large of a number for most hardware to handle.
+    if (length > MAX_INPUT) {
+        return FAILURE;
+    }
 
-	int exitCode = FAILURE;
+    // If table size isn't a power of 2, fail.
+    const int tablesize = NextPowerOfTwo(length);
+    if (lookuptable.tablesize != tablesize) {
+        return FAILURE;
+    }
 
-	// Create array of buckets and collision table
-	bucket* buckets = calloc(tablesize, sizeof(bucket));
-	char* collisions = calloc(tablesize, sizeof(char));
-	if (buckets == NULL || collisions == NULL) { 
-		goto Cleanup; 
-	}
+    int exitCode = FAILURE;
 
-	// Create buckets by regular hashing
-	for (int i = 0; i < length; i++) {
-		int slot = (int)HashZeroInline4(input[i]) & (tablesize - 1);
-		buckets[slot].slot = slot; 
+    // Create array of buckets and collision table
+    bucket* buckets = calloc(tablesize, sizeof(bucket));
+    char* collisions = calloc(tablesize, sizeof(char));
+    if (buckets == NULL || collisions == NULL) {
+        goto Cleanup;
+    }
 
-		// Add the key/value pair to the correct bucket
-		if (AddNodeToBucket(&buckets[slot], input[i]) == FAILURE) {
-			goto Cleanup; 
-		}		
-	} 	
+    // Create buckets by regular hashing
+    for (int i = 0; i < length; i++) {
+        int slot = (int)HashZeroInline4(input[i]) & (tablesize - 1);
+        buckets[slot].slot = slot;
 
-	// Sort the buckets
-	// NOTE: Implementing a version of radix sort may be more efficient than quick sort
-	// For time, I'm leaving it at quick sort
-	qsort(buckets, tablesize, sizeof(bucket), BucketCompare);
+        // Add the key/value pair to the correct bucket
+        if (AddNodeToBucket(&buckets[slot], input[i]) == FAILURE) {
+            goto Cleanup;
+        }
+    }
 
-	// If the largest bucket is of size 1, we already have no collisions
-	if (buckets[0].size == 1) {
-		// Lookup table is all 0s 
-		memset(lookuptable.table, 0, tablesize * sizeof(int));
-		exitCode = SUCCESS; 
-		goto Cleanup; 
-	}
+    // Sort the buckets
+    // NOTE: Implementing a version of radix sort may be more efficient than quick sort
+    // For time, I'm leaving it at quick sort
+    qsort(buckets, tablesize, sizeof(bucket), BucketCompare);
 
-	// For each bucket, find a seed that works for no collisions
-	uchar seed;
-	for (int i = 0; i < tablesize; i++) {
-		// If we only have empty buckets left, stop.
-		if (buckets[i].size == 0) {
-			break; 
-		}
-		seed = FindSeed(&buckets[i], collisions, tablesize);
-		if (seed == UCHAR_MAX) {
-			goto Cleanup;
-		}
-		// Add the seed to the lookup table 
-		int lookupslot = buckets[i].slot;
-		lookuptable.table[lookupslot] = seed;
-	}
-	exitCode = SUCCESS;
+    // If the largest bucket is of size 1, we already have no collisions
+    if (buckets[0].size == 1) {
+        // Lookup table is all 0s
+        memset(lookuptable.table, 0, tablesize * sizeof(int));
+        exitCode = SUCCESS;
+        goto Cleanup;
+    }
+
+    // For each bucket, find a seed that works for no collisions
+    uchar seed;
+    for (int i = 0; i < tablesize; i++) {
+        // If we only have empty buckets left, stop.
+        if (buckets[i].size == 0) {
+            break;
+        }
+        seed = FindSeed(&buckets[i], collisions, tablesize);
+        if (seed == UCHAR_MAX) {
+            goto Cleanup;
+        }
+        // Add the seed to the lookup table
+        int lookupslot = buckets[i].slot;
+        lookuptable.table[lookupslot] = seed;
+    }
+    exitCode = SUCCESS;
 
 Cleanup:
-	// Free all allocated memory and return exit code
-	if (buckets) {
-		for (int i = 0; i < tablesize; i++) {
-			FreeKeys(buckets[i].head);
-		}
-		free(buckets);
-	}
-	if (collisions) {
-		free(collisions);
-	}
-	return exitCode; 
+    // Free all allocated memory and return exit code
+    if (buckets) {
+        for (int i = 0; i < tablesize; i++) {
+            FreeKeys(buckets[i].head);
+        }
+        free(buckets);
+    }
+    if (collisions) {
+        free(collisions);
+    }
+    return exitCode;
 }
 
 /* Lookup
-Description: 
-	Return a value in the hash table given a key
+Description:
+    Return a value in the hash table given a key
 Parameters:
-	key: Key whose value we are looking up in the hash table 
-	lookuptable: Table containing
-	hashtable: The hash table containing values
-Returns: 
-	The value from the hash table
+    key: Key whose value we are looking up in the hash table
+    lookuptable: Table containing
+    hashtable: The hash table containing values
+Returns:
+    The value from the hash table
 */
 uint Lookup(uint key, lookup lookuptable, uint* hashtable) {
 
-	// Grab the hash function seed from the lookup table	
-	int lookupslot = (int)HashZeroInline4(key) & (lookuptable.tablesize - 1);
-	uchar seed = lookuptable.table[lookupslot];
-	int valueslot;
+    // Grab the hash function seed from the lookup table
+    int lookupslot = (int)HashZeroInline4(key) & (lookuptable.tablesize - 1);
+    uchar seed = lookuptable.table[lookupslot];
+    int valueslot;
 
-	// Get the actual value from the hash table
-	if (seed == 0) {
-		// Don't need to hash again
-		valueslot = lookupslot; 
-	}
-	else {
-		 valueslot = (int)Hash4(key, seed) & (lookuptable.tablesize - 1);
-	}	
+    // Get the actual value from the hash table
+    if (seed == 0) {
+        // Don't need to hash again
+        valueslot = lookupslot;
+    }
+    else {
+         valueslot = (int)Hash4(key, seed) & (lookuptable.tablesize - 1);
+    }
 
-	int value = hashtable[valueslot];
-	return value; 	
+    int value = hashtable[valueslot];
+    return value;
 }
 
 /* Insert
-Description: 
-	Insert an item into the hash table using the given seed 	
-Parameters: 
-	key: Key whose associated value we want to insert
-	value: Value to insert
-	lookuptable: Lookup table for the perfect hash function
-	hashtable: Table to insert values into. Must be the same size as lookuptable. 
+Description:
+    Insert an item into the hash table using the given seed
+Parameters:
+    key: Key whose associated value we want to insert
+    value: Value to insert
+    lookuptable: Lookup table for the perfect hash function
+    hashtable: Table to insert values into. Must be the same size as lookuptable.
 */
 void Insert(uint key, uint value, lookup lookuptable, uint* hashtable) {
-	int lookupslot = HashZeroInline4(key) & (lookuptable.tablesize - 1);
-	int seed = lookuptable.table[lookupslot];
-	int hashslot = Hash4(key, seed) & (lookuptable.tablesize - 1);
-	hashtable[hashslot] = value; 
+    int lookupslot = HashZeroInline4(key) & (lookuptable.tablesize - 1);
+    int seed = lookuptable.table[lookupslot];
+    int hashslot = Hash4(key, seed) & (lookuptable.tablesize - 1);
+    hashtable[hashslot] = value;
 }
 
 /* CreateEmptyLookupTable
-Description: 
-	Creates an empty lookup table. When finished, the calling function must call FreeLookupTable()
-Parameters: 
-	inputlength: Number of elements in the input keys
-Returns: 
-	An empty lookup table. Tablesize = -1 if allocation failed. 
-	Otherwise, tablesize is the next largest power of 2 rounded up from inputlength. 
+Description:
+    Creates an empty lookup table. When finished, the calling function must call FreeLookupTable()
+Parameters:
+    inputlength: Number of elements in the input keys
+Returns:
+    An empty lookup table. Tablesize = -1 if allocation failed.
+    Otherwise, tablesize is the next largest power of 2 rounded up from inputlength.
 */
 lookup CreateEmptyLookupTable(int inputlength) {
-	lookup lookuptable; 
-	int tablesize = NextPowerOfTwo(inputlength);
-	lookuptable.table = calloc(tablesize, sizeof(uchar));
-	if (lookuptable.table == NULL) {
-		lookuptable.tablesize = -1; 
-	}
-	else {
-		lookuptable.tablesize = tablesize; 
-	}
-	return lookuptable; 
+    lookup lookuptable;
+    int tablesize = NextPowerOfTwo(inputlength);
+    lookuptable.table = calloc(tablesize, sizeof(uchar));
+    if (lookuptable.table == NULL) {
+        lookuptable.tablesize = -1;
+    }
+    else {
+        lookuptable.tablesize = tablesize;
+    }
+    return lookuptable;
 }
 
 /* FreeLookupTable
-Description: 
-	Frees a previously allocated lookup table
-Parameters: 
-	lookuptable: Lookup table to free
+Description:
+    Frees a previously allocated lookup table
+Parameters:
+    lookuptable: Lookup table to free
 */
 void FreeLookupTable(lookup lookuptable) {
-	free(lookuptable.table);
-	lookuptable.tablesize = -1; 
+    free(lookuptable.table);
+    lookuptable.tablesize = -1;
 }
