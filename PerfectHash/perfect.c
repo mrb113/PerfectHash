@@ -103,7 +103,6 @@ Returns:
     The value from the hash table
 */
 uint Lookup(uint key, lookup lookuptable, uint* hashtable) {
-
     // Grab the hash function seed from the lookup table
     int lookupslot = (int)HashZeroInline4(key) & (lookuptable.tablesize - 1);
     uchar seed = lookuptable.table[lookupslot];

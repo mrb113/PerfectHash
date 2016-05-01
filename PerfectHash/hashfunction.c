@@ -2,8 +2,7 @@
 
 /* Bob Jenkins' hash function modified to take a seed
    http://burtleburtle.net/bob/hash/integer.html */
-uint Hash6(uint a, uint seed)
-{
+uint Hash6(uint a, uint seed) {
     a = (a + seed) + (a << 12);
     a = (a ^ 0xc761c23c) ^ (a >> 19);
     a = (a + 0x165667b1) + (a << 5);
@@ -16,8 +15,7 @@ uint Hash6(uint a, uint seed)
 /* HashZeroInline
 Description:
     We'll be using seed 0 most of the time, so we inline it */
-uint HashZeroInline6(uint a)
-{
+uint HashZeroInline6(uint a) {
     a = (a) + (a << 12);
     a = (a ^ 0xc761c23c) ^ (a >> 19);
     a = (a + 0x165667b1) + (a << 5);
@@ -48,8 +46,7 @@ uint Hash5(uint a, uint seed) {
 }
 
 /* 4 shift hash function - zero inlined */
-uint HashZeroInline4(uint a)
-{
+uint HashZeroInline4(uint a) {
     a = (a ^ 0) + (a << 4);
     a = a ^ (a >> 10);
     a = a + (a << 7);
@@ -58,8 +55,7 @@ uint HashZeroInline4(uint a)
 }
 
 /* 4 shift hash function */
-uint Hash4(uint a, uint seed)
-{
+uint Hash4(uint a, uint seed) {
     a = (a ^ seed) + (a << 4);
     a = a ^ (a >> 10);
     a = a + (a << 7);
@@ -68,8 +64,7 @@ uint Hash4(uint a, uint seed)
 }
 
 /* 3 shift hash function - zero inlined */
-uint HashZeroInline3(uint a)
-{
+uint HashZeroInline3(uint a) {
     a = a ^ (a >> 4);
     a = (a ^ 0) + (a << 5);
     a = a ^ (a >> 11);
@@ -77,8 +72,7 @@ uint HashZeroInline3(uint a)
 }
 
 /* 3 shift function */
-uint Hash3(uint a, uint seed)
-{
+uint Hash3(uint a, uint seed) {
     a = a ^ (a >> 4);
     a = (a ^ seed) + (a << 5);
     a = a ^ (a >> 11);

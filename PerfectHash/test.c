@@ -85,7 +85,7 @@ void calculatePercentageEmpty(lookup lookuptable) {
     printf("%f \n", percentage);
 }
 
-void printlookuptable(lookup* lookuptable, int size){
+void printlookuptable(lookup* lookuptable, int size) {
     for (int i = 0; i < size; i++) {
         printf("%d: %d\n", i, lookuptable->table[i]);
     }
@@ -98,7 +98,7 @@ void printbucketlist(p_bucket bucketlist, int size) {
     }
 }
 
-void printbucket(p_bucket bucket){
+void printbucket(p_bucket bucket) {
     if (bucket->size == 0) {
         return;
     }
